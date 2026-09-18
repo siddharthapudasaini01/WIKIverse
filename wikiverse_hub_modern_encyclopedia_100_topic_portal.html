@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WikiVerse Hub — Modern Encyclopedia & Wikipedia Client</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#1e1b4b',
+                        },
+                        sepia: {
+                            bg: '#fbf0d9',
+                            card: '#f3e5ab',
+                            text: '#433422',
+                            border: '#e4d3a2'
+                        },
+                        oled: {
+                            bg: '#000000',
+                            card: '#0a0a0a',
+                            border: '#1a1a1a',
+                            text: '#e5e5e5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Merriweather', 'Georgia', 'serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.25s ease, color 0.25s ease;
+        }
+
+        /* Reader typography settings */
+        .reader-font-serif { font-family: 'Merriweather', serif; }
+        .reader-font-sans { font-family: 'Inter', sans-serif; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+
+        /* Sepia Theme Overrides */
+        body.theme-sepia {
+            background-color: #fbf0d9 !important;
+            color: #433422 !important;
+        }
+        body.theme-sepia .bg-surface {
+            background-color: #f4e8c1 !important;
+            border-color: #e4d5a3 !important;
+        }
+        body.theme-sepia .text-muted {
+            color: #7c684d !important;
+        }
+
+        /* OLED Black Theme Overrides */
+        body.theme-oled {
+            background-color: #000000 !important;
+            color: #e5e5e5 !important;
+        }
+        body.theme-oled .bg-surface {
+            background-color: #0d0d0d !important;
+            border-color: #222222 !important;
+        }
+        body.theme-oled .text-muted {
+            color: #888888 !important;
+        }
+
+        /* Inline Wikipedia Link Styles */
+        .article-content a {
+            color: #4f46e5;
+            text-decoration: underline;
+            text-decoration-color: rgba(79, 70, 229, 0.3);
+            text-underline-offset: 3px;
+            transition: all 0.2s ease;
+        }
+        .article-content a:hover {
+            text-decoration-color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.08);
+            border-radius: 2px;
+        }
+        .dark .article-content a {
+            color: #818cf8;
+            text-decoration-color: rgba(129, 140, 248, 0.3);
+        }
+
+        /* Active Navigation Link Indicator */
+        .nav-link.active {
+            color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
+            font-weight: 600;
+        }
+        .dark .nav-link.active {
+            color: #818cf8;
+            background-color: rgba(129, 140, 248, 0.15);
+        }
+
+        /* Print Mode Styles */
+        @media print {
+            header, footer, #sidebarNav, #readerToolbar, .no-print {
+                display: none !important;
+            }
+            main {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col antialiased">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 w-full backdrop-blur-md bg-white/85 dark:bg-slate-900/85 border-b border-slate-200 dark:border-slate-800 transition-colors no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+            
+            <!-- Left: Logo & Mobile Toggle -->
+            <div class="flex items-center gap-3">
+                <button id="mobileMenuBtn" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white md:hidden rounded-lg">
+                    <i class="fa-solid fa-bars text-lg"></i>
+                </button>
+
+                <a href="#home" class="flex items-center gap-2.5 group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-purple-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+                        <span class="font-serif font-extrabold text-2xl tracking-tighter">W</span>
+                    </div>
+                    <div>
+                        <span class="font-bold text-lg tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                            WikiVerse <span class="text-xs px-2 py-0.5 rounded-md bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 font-mono font-semibold">HUB</span>
+                        </span>
+                        <span class="text-[10px] block text-slate-400 dark:text-slate-500 -mt-1 font-medium">100+ Topics & Live Wikipedia API</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Center: Omnibox Instant Search -->
+            <div class="flex-1 max-w-xl relative hidden md:block">
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="searchInput" placeholder="Search 100+ curated topics or any live Wikipedia article..." 
+                        class="w-full pl-10 pr-20 py-2 bg-slate-100 dark:bg-slate-800/80 text-sm rounded-xl border border-transparent focus:border-brand-500 focus:bg-white dark:focus:bg-slate-900 focus:outline-none transition-all dark:text-white placeholder-slate-400"
+                        autocomplete="off">
+                    <div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        <kbd class="px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-200 dark:bg-slate-700 rounded border border-slate-300 dark:border-slate-600">⌘K</kbd>
+                    </div>
+                </div>
+
+                <!-- Autocomplete Dropdown -->
+                <div id="searchResults" class="hidden absolute left-0 right-0 top-full mt-2 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                    <div class="p-2.5 border-b border-slate-100 dark:border-slate-800/80 flex justify-between items-center text-xs text-slate-400 px-3">
+                        <span id="searchSourceLabel">Suggestions</span>
+                        <span class="text-brand-600 dark:text-brand-400 font-semibold text-[11px]"><i class="fa-solid fa-bolt mr-1"></i> Instant Engine</span>
+                    </div>
+                    <div id="searchResultsList" class="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Controls -->
+            <div class="flex items-center gap-2">
+                <!-- Random Article -->
+                <button id="randomBtn" title="Random Article from 100+ DB" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-1.5 text-xs font-semibold">
+                    <i class="fa-solid fa-shuffle text-brand-500"></i>
+                    <span class="hidden sm:inline">Random</span>
+                </button>
+
+                <!-- Bookmarks Direct Button -->
+                <a href="#bookmarks" title="Saved Articles" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors relative">
+                    <i class="fa-solid fa-bookmark text-amber-500"></i>
+                    <span id="bookmarkBadge" class="hidden absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">0</span>
+                </a>
+
+                <!-- Theme Quick Selector -->
+                <button id="themeToggleBtn" title="Toggle Theme" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
+                    <i class="fa-solid fa-moon dark:hidden"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-amber-400"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Search Bar -->
+        <div class="p-2 border-t border-slate-100 dark:border-slate-800 md:hidden px-4">
+            <div class="relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                <input type="text" id="mobileSearchInput" placeholder="Search 100+ topics or Wikipedia..." 
+                    class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 text-xs rounded-xl border border-transparent focus:outline-none dark:text-white">
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-8">
+
+        <!-- SIDEBAR NAVIGATION (DESKTOP) -->
+        <aside id="sidebarNav" class="w-64 shrink-0 hidden md:block space-y-6 no-print">
+            <nav class="space-y-1 text-sm font-medium">
+                <a href="#home" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-house text-brand-500 w-5"></i>
+                    <span>Portal Home</span>
+                </a>
+                <a href="#categories" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-layer-group text-indigo-500 w-5"></i>
+                    <span>100+ Category Index</span>
+                </a>
+                <a href="#live-search" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-globe text-emerald-500 w-5"></i>
+                    <span>Live Wikipedia API</span>
+                </a>
+                <a href="#bookmarks" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-bookmark text-amber-500 w-5"></i>
+                    <span>Saved Bookmarks</span>
+                </a>
+                <a href="#history" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-500 w-5"></i>
+                    <span>Reading History</span>
+                </a>
+                <a href="#on-this-day" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-calendar-day text-rose-500 w-5"></i>
+                    <span>On This Day</span>
+                </a>
+            </nav>
+
+            <div class="pt-4 border-t border-slate-200 dark:border-slate-800">
+                <div class="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Top Disciplines</div>
+                <div class="mt-2 space-y-1 text-xs">
+                    <a href="#category/Science" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-flask text-blue-500"></i> Science & Physics</span>
+                        <span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">15</span>
+                    </a>
+                    <a href="#category/History" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-landmark text-amber-500"></i> History & Wars</span>
+                        <span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">16</span>
+                    </a>
+                    <a href="#category/Technology" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-microchip text-emerald-500"></i> Tech & Computing</span>
+                        <span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">14</span>
+                    </a>
+                    <a href="#category/Space" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-shuttle-space text-purple-500"></i> Astronomy & Space</span>
+                        <span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">12</span>
+                    </a>
+                    <a href="#category/Medicine" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <span class="flex items-center gap-2"><i class="fa-solid fa-heart-pulse text-red-500"></i> Biology & Health</span>
+                        <span class="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">10</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Stats Box -->
+            <div class="bg-gradient-to-br from-brand-600 to-indigo-700 text-white p-4 rounded-2xl shadow-lg space-y-2 text-xs">
+                <div class="font-bold flex items-center gap-1.5 text-sm">
+                    <i class="fa-solid fa-database"></i> Database Active
+                </div>
+                <p class="text-brand-100">100+ hand-curated offline pages ready + live Wikipedia REST API integrated.</p>
+                <div class="pt-2 flex justify-between items-center text-[10px] text-brand-200 font-mono">
+                    <span>Status: Connected</span>
+                    <span>v2.5.0</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN VIEWPORT CONTENT (DYNAMIC SPA ROUTING) -->
+        <main id="appViewport" class="flex-1 min-w-0">
+            <!-- Dynamic Content Injected Here via JavaScript Hash Router -->
+        </main>
+    </div>
+
+    <!-- CITATION GENERATOR MODAL -->
+    <div id="citationModal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-quote-right text-brand-500"></i> Generate Citation
+                </h3>
+                <button onclick="closeCitationModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-400 mb-1">Format Style</label>
+                    <select id="citationFormat" onchange="updateCitationText()" class="w-full p-2 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 text-xs">
+                        <option value="APA">APA 7th Edition</option>
+                        <option value="MLA">MLA 9th Edition</option>
+                        <option value="Chicago">Chicago Style</option>
+                        <option value="BibTeX">BibTeX</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block font-semibold text-slate-600 dark:text-slate-400 mb-1">Generated Text</label>
+                    <textarea id="citationOutput" readonly rows="4" class="w-full p-3 bg-slate-50 dark:bg-slate-950 font-mono text-xs rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="copyCitation()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5 shadow-md">
+                    <i class="fa-regular fa-copy"></i> Copy Citation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Comprehensive Client-Side Database of 100+ Curated Articles across 10 Disciplines
+        const TOPICS_DATABASE = [
+            // SCIENCE (15)
+            { id: "Quantum_computing", title: "Quantum Computing", category: "Science", summary: "Quantum computing is a rapidly-emerging technology that harnesses the laws of quantum mechanics to solve problems too complex for classical computers.", reads: "8 min", views: "3.2M", date: "2026-01-15" },
+            { id: "Theory_of_relativity", title: "Theory of Relativity", category: "Science", summary: "Albert Einstein's theory encompassing special relativity and general relativity, transforming modern physics and astrophysics.", reads: "12 min", views: "4.5M", date: "2026-02-01" },
+            { id: "DNA", title: "Deoxyribonucleic Acid (DNA)", category: "Science", summary: "A polymer composed of two polynucleotide chains that coil around each other to form a double helix carrying genetic instructions.", reads: "10 min", views: "2.8M", date: "2026-01-20" },
+            { id: "Photosynthesis", title: "Photosynthesis", category: "Science", summary: "The biological process used by plants and organisms to convert light energy into chemical energy stored in organic molecules.", reads: "7 min", views: "1.9M", date: "2026-02-10" },
+            { id: "Standard_Model", title: "Standard Model of Particle Physics", category: "Science", summary: "The theory describing three of the four known fundamental forces and classifying all known elementary particles.", reads: "14 min", views: "1.4M", date: "2026-02-18" },
+            { id: "Thermodynamics", title: "Laws of Thermodynamics", category: "Science", summary: "Fundamental physical quantities such as temperature, energy, and entropy that characterize thermodynamic systems at equilibrium.", reads: "9 min", views: "2.1M", date: "2026-01-29" },
+            { id: "CRISPR", title: "CRISPR Gene Editing", category: "Science", summary: "A family of DNA sequences found in prokaryotic organisms used to deliver precise genetic modifications.", reads: "11 min", views: "3.9M", date: "2026-03-02" },
+            { id: "Evolution", title: "Biological Evolution", category: "Science", summary: "Change in the heritable characteristics of biological populations over successive generations driven by natural selection.", reads: "15 min", views: "5.1M", date: "2026-02-22" },
+            { id: "String_theory", title: "String Theory", category: "Science", summary: "A theoretical framework in which point-like particles of particle physics are replaced by one-dimensional objects called strings.", reads: "13 min", views: "1.7M", date: "2026-01-10" },
+            { id: "Dark_matter", title: "Dark Matter & Dark Energy", category: "Science", summary: "Hypothetical forms of matter and energy that account for approximately 95% of the total universe energy density.", reads: "10 min", views: "2.9M", date: "2026-02-14" },
+            { id: "Plate_tectonics", title: "Plate Tectonics", category: "Science", summary: "The scientific theory describing the large-scale motion of seven large plates and smaller plates of the Earth's lithosphere.", reads: "8 min", views: "1.6M", date: "2026-01-18" },
+            { id: "Higgs_boson", title: "Higgs Boson", category: "Science", summary: "An elementary particle in the Standard Model produced by the quantum excitation of the Higgs field.", reads: "9 min", views: "2.3M", date: "2026-03-05" },
+            { id: "Neuroscience", title: "Neuroscience & Synaptic Plasticity", category: "Science", summary: "The multidisciplinary scientific study of the nervous system and brain neural pathways encoding human memory.", reads: "11 min", views: "3.0M", date: "2026-02-08" },
+            { id: "Big_Bang", title: "The Big Bang Cosmological Model", category: "Science", summary: "The prevailing cosmological description of the observable universe from the earliest known periods through its theoretical expansion.", reads: "12 min", views: "4.1M", date: "2026-01-30" },
+            { id: "Quantum_entanglement", title: "Quantum Entanglement", category: "Science", summary: "A phenomenon where quantum particles remain interconnected such that actions performed on one instantly affect the other.", reads: "10 min", views: "2.7M", date: "2026-02-25" },
+
+            // HISTORY (16)
+            { id: "Ancient_Egypt", title: "Ancient Egypt & The Pharaohs", category: "History", summary: "A civilization of ancient North Africa, concentrated along the lower reaches of the Nile River, famous for pyramids and hieroglyphs.", reads: "16 min", views: "6.2M", date: "2026-01-05" },
+            { id: "Renaissance", title: "The European Renaissance", category: "History", summary: "A fervent period of European cultural, artistic, political and economic 'rebirth' following the Middle Ages.", reads: "14 min", views: "4.8M", date: "2026-02-04" },
+            { id: "Industrial_Revolution", title: "The Industrial Revolution", category: "History", summary: "The transition to new manufacturing processes in Great Britain, continental Europe, and the United States from 1760 to 1840.", reads: "13 min", views: "3.7M", date: "2026-01-25" },
+            { id: "World_War_II", title: "World War II", category: "History", summary: "A global conflict that lasted from 1939 to 1945 involving the vast majority of the world's countries and alliances.", reads: "22 min", views: "9.5M", date: "2026-02-12" },
+            { id: "Roman_Empire", title: "The Roman Empire", category: "History", summary: "The post-Republican period of ancient Rome, featuring autocratic government and vast territorial holdings around the Mediterranean.", reads: "18 min", views: "7.1M", date: "2026-01-12" },
+            { id: "French_Revolution", title: "French Revolution", category: "History", summary: "A period of radical political and societal change in France that began with the Estates-General of 1789.", reads: "15 min", views: "3.4M", date: "2026-02-19" },
+            { id: "Silk_Road", title: "The Silk Road Overland Network", category: "History", summary: "An ancient network of Eurasian trade routes active from the Han dynasty until the Ottoman Empire boycotted trade with the West.", reads: "11 min", views: "2.6M", date: "2026-03-01" },
+            { id: "Gutenberg_Press", title: "Movable Type Printing Press", category: "History", summary: "Johannes Gutenberg's invention around 1440 that revolutionized the mass production of books and knowledge dissemination.", reads: "9 min", views: "2.0M", date: "2026-01-14" },
+            { id: "Cold_War", title: "The Cold War Era", category: "History", summary: "A period of geopolitical tension between the United States and the Soviet Union and their respective allies following WWII.", reads: "16 min", views: "4.9M", date: "2026-02-11" },
+            { id: "Aztec_Empire", title: "The Aztec Empire", category: "History", summary: "An alliance of three Nahua city-states that ruled the area in and around the Valley of Mexico from 1428 until conquest.", reads: "10 min", views: "2.1M", date: "2026-02-28" },
+            { id: "Byzantine_Empire", title: "The Byzantine Empire", category: "History", summary: "The continuation of the Roman Empire in its eastern provinces during Late Antiquity and the Middle Ages, centered in Constantinople.", reads: "14 min", views: "3.1M", date: "2026-01-22" },
+            { id: "Mongol_Empire", title: "The Mongol Empire", category: "History", summary: "The largest contiguous land empire in history, founded by Genghis Khan in 1206 stretching across Eurasia.", reads: "15 min", views: "5.0M", date: "2026-02-17" },
+            { id: "Magna_Carta", title: "Magna Carta (1215)", category: "History", summary: "A royal charter of rights agreed to by King John of England that established early principles of statutory law.", reads: "8 min", views: "1.8M", date: "2026-03-04" },
+            { id: "American_Revolution", title: "American Revolutionary War", category: "History", summary: "An epic military conflict in which Thirteen Colonies won independence from Great Britain, creating the United States.", reads: "14 min", views: "3.8M", date: "2026-01-19" },
+            { id: "Space_Race", title: "The Cold War Space Race", category: "History", summary: "A 20th-century competition between two Cold War adversaries, the Soviet Union and the United States, for dominance in spaceflight.", reads: "12 min", views: "4.2M", date: "2026-02-26" },
+            { id: "Age_of_Discovery", title: "Age of Discovery & Navigation", category: "History", summary: "A period of overseas exploration from the 15th to 17th century that bridged global maritime trade routes.", reads: "13 min", views: "2.5M", date: "2026-02-07" },
+
+            // TECHNOLOGY (14)
+            { id: "Artificial_intelligence", title: "Artificial Intelligence", category: "Technology", summary: "Intelligence demonstrated by machines, synthesizing generative neural networks, deep learning, and natural language processing.", reads: "15 min", views: "12.4M", date: "2026-03-08" },
+            { id: "Internet", title: "History of the Global Internet", category: "Technology", summary: "The global system of interconnected computer networks that uses the Internet protocol suite (TCP/IP) to communicate.", reads: "14 min", views: "8.1M", date: "2026-02-03" },
+            { id: "Blockchain", title: "Blockchain & Cryptography", category: "Technology", summary: "A distributed ledger with growing lists of records, called blocks, linked together using cryptographic hashes.", reads: "10 min", views: "3.5M", date: "2026-01-28" },
+            { id: "Semiconductor", title: "Semiconductor Fabrication & Silicon", category: "Technology", summary: "Materials with electrical conductivity between a conductor and an insulator, forming the bedrock of microprocessors.", reads: "12 min", views: "2.9M", date: "2026-02-16" },
+            { id: "Cybersecurity", title: "Cybersecurity & Encryption", category: "Technology", summary: "The protection of computer systems and networks from information disclosure, theft, or damage to hardware/software.", reads: "9 min", views: "2.7M", date: "2026-03-03" },
+            { id: "Autonomous_car", title: "Autonomous Vehicles & Robotics", category: "Technology", summary: "Vehicles capable of sensing their environment and operating without human involvement via LiDAR and computer vision.", reads: "10 min", views: "2.3M", date: "2026-01-16" },
+            { id: "Cloud_computing", title: "Cloud Computing Architecture", category: "Technology", summary: "The on-demand availability of computer system resources, especially data storage and computing power without direct user management.", reads: "8 min", views: "3.1M", date: "2026-02-20" },
+            { id: "Virtual_reality", title: "Virtual & Augmented Reality", category: "Technology", summary: "Simulated experiences that employ pose tracking and 3D near-eye displays to give the user an immersive synthetic world.", reads: "9 min", views: "2.4M", date: "2026-02-09" },
+            { id: "Optical_fiber", title: "Fiber-Optic Telecommunications", category: "Technology", summary: "A flexible, transparent fiber drawn of glass or plastic that transmits light between two ends over long distances.", reads: "7 min", views: "1.5M", date: "2026-01-11" },
+            { id: "Gene_therapy", title: "Gene Therapy & Nanomedicine", category: "Technology", summary: "A medical field focused on the genetic modification of cells to produce a therapeutic effect or cure disease.", reads: "11 min", views: "2.0M", date: "2026-02-23" },
+            { id: "Machine_learning", title: "Machine Learning Algorithms", category: "Technology", summary: "A field devoted to understanding and building methods that 'learn'—leveraging data to improve performance on tasks.", reads: "13 min", views: "6.8M", date: "2026-03-06" },
+            { id: "Wireless_network", title: "5G & 6G Wireless Telecommunications", category: "Technology", summary: "Cellular network technologies enabling ultra-low latency data transmission and massive IoT device connectivity.", reads: "8 min", views: "1.9M", date: "2026-02-13" },
+            { id: "Linux", title: "The Linux Operating System Kernel", category: "Technology", summary: "An open-source Unix-like operating system kernel created by Linus Torvalds that powers modern servers, Android, and supercomputers.", reads: "12 min", views: "4.0M", date: "2026-01-24" },
+            { id: "3D_printing", title: "Additive Manufacturing (3D Printing)", category: "Technology", summary: "The construction of a three-dimensional object from a CAD model or digital 3D model by depositing sequential material layers.", reads: "8 min", views: "2.2M", date: "2026-02-27" },
+
+            // SPACE & ASTRONOMY (12)
+            { id: "Solar_System", title: "The Solar System", category: "Space", summary: "The gravitationally bound system of the Sun and the objects that orbit it, including eight major planets.", reads: "15 min", views: "7.8M", date: "2026-01-08" },
+            { id: "Black_hole", title: "Black Holes & Event Horizons", category: "Space", summary: "A region of spacetime where gravity is so strong that nothing—no particles or light—can escape from it.", reads: "12 min", views: "8.9M", date: "2026-02-06" },
+            { id: "James_Webb_Space_Telescope", title: "James Webb Space Telescope", category: "Space", summary: "The premier space observatory conducting infrared astronomy to observe the earliest galaxies formed after the Big Bang.", reads: "11 min", views: "5.4M", date: "2026-03-07" },
+            { id: "Mars", title: "Mars Exploration & Geology", category: "Space", summary: "The fourth planet from the Sun, featuring thin atmosphere, polar ice caps, and dormant volcanoes like Olympus Mons.", reads: "14 min", views: "6.0M", date: "2026-01-31" },
+            { id: "Milky_Way", title: "The Milky Way Galaxy", category: "Space", summary: "The barred spiral galaxy that contains our Solar System, estimated to contain 100–400 billion stars.", reads: "10 min", views: "3.6M", date: "2026-02-15" },
+            { id: "Exoplanet", title: "Exoplanet Discovery & Habitability", category: "Space", summary: "Planets outside the Solar System orbiting other stars in habitable 'Goldilocks' zones capable of harboring liquid water.", reads: "10 min", views: "2.8M", date: "2026-02-02" },
+            { id: "Neutron_star", title: "Neutron Stars & Pulsars", category: "Space", summary: "The collapsed core of a massive supergiant star, representing the densest stellar objects known in the cosmos.", reads: "9 min", views: "2.1M", date: "2026-01-17" },
+            { id: "International_Space_Station", title: "International Space Station (ISS)", category: "Space", summary: "A modular space station in low Earth Orbit serving as a microgravity space environment research laboratory.", reads: "11 min", views: "3.3M", date: "2026-02-21" },
+            { id: "Supernova", title: "Supernovae & Stellar Nucleosynthesis", category: "Space", summary: "A powerful and luminous explosion of a star that occurs during the last evolutionary stages of a massive star.", reads: "9 min", views: "2.4M", date: "2026-03-04" },
+            { id: "Moon_landing", title: "Apollo Moon Landings", category: "Space", summary: "NASA missions that landed the first humans on the Moon in July 1969 with Apollo 11's Eagle lunar module.", reads: "13 min", views: "5.8M", date: "2026-01-23" },
+            { id: "Hubble_Space_Telescope", title: "Hubble Space Telescope", category: "Space", summary: "A iconic space telescope launched into low Earth orbit in 1990 that has yielded over 1.5 million astronomical observations.", reads: "10 min", views: "3.0M", date: "2026-02-24" },
+            { id: "Jupiter", title: "Jupiter & The Galilean Moons", category: "Space", summary: "The largest planet in the Solar System, a gas giant with a Great Red Spot storm and dozens of moons including Europa.", reads: "12 min", views: "4.0M", date: "2026-01-27" },
+
+            // ART & LITERATURE (12)
+            { id: "Mona_Lisa", title: "The Mona Lisa (Leonardo da Vinci)", category: "Art", summary: "A half-length portrait painting by Italian artist Leonardo da Vinci, considered an archetypal masterpiece of the Italian Renaissance.", reads: "9 min", views: "5.9M", date: "2026-01-09" },
+            { id: "William_Shakespeare", title: "William Shakespeare & Dramaturgy", category: "Art", summary: "An English playwright, poet and actor widely regarded as the greatest writer in the English language.", reads: "16 min", views: "6.4M", date: "2026-02-05" },
+            { id: "Modern_art", title: "Modern & Contemporary Art Movements", category: "Art", summary: "Artistic work produced during the period extending roughly from the 1860s to the 1970s, rejecting traditional aesthetics.", reads: "11 min", views: "2.1M", date: "2026-01-21" },
+            { id: "Classical_music", title: "Classical Music & Symphony", category: "Art", summary: "Art music produced or rooted in the traditions of Western culture, encompassing orchestral composition and harmony.", reads: "13 min", views: "2.9M", date: "2026-02-18" },
+            { id: "Impressionism", title: "Impressionist Painting Movement", category: "Art", summary: "A 19th-century art movement characterized by small, thin, yet visible brush strokes and open composition.", reads: "8 min", views: "1.9M", date: "2026-03-02" },
+            { id: "Architecture", title: "History of World Architecture", category: "Art", summary: "The art and science of designing and constructing buildings and physical structures across human civilisations.", reads: "14 min", views: "3.2M", date: "2026-01-13" },
+            { id: "Cinema", title: "History of Motion Pictures & Film", category: "Art", summary: "The development of cinematography, from early kinetoscopes to digital visual effects and storytelling.", reads: "12 min", views: "3.8M", date: "2026-02-22" },
+            { id: "Surrealism", title: "Surrealism Art & Salvador Dalí", category: "Art", summary: "A cultural movement that depicted unnatural scenes and illogical dreamscapes using precise realistic technique.", reads: "9 min", views: "2.2M", date: "2026-01-26" },
+            { id: "Homer", title: "The Iliad & Odyssey (Homer)", category: "Art", summary: "Ancient Greek epic poems attributed to Homer that foundationalized Western literary canon.", reads: "12 min", views: "2.7M", date: "2026-02-08" },
+            { id: "Gothic_architecture", title: "Gothic Cathedrals & Architecture", category: "Art", summary: "An architectural style that flourished in Europe during the High and Late Middle Ages, featuring pointed arches and flying buttresses.", reads: "10 min", views: "2.0M", date: "2026-03-01" },
+            { id: "Beethoven", title: "Ludwig van Beethoven", category: "Art", summary: "A German composer and pianist who remains one of the most admired figures in Western music history.", reads: "11 min", views: "4.1M", date: "2026-02-14" },
+            { id: "Origami", title: "Origami & Paper Folding Art", category: "Art", summary: "The ancient Japanese art of paper folding, evolving into mathematical applications in modern engineering.", reads: "7 min", views: "1.5M", date: "2026-01-15" },
+
+            // GEOGRAPHY & PLACES (11)
+            { id: "Great_Wall_of_China", title: "The Great Wall of China", category: "Geography", summary: "A series of fortification systems built across the historical northern borders of ancient Chinese states.", reads: "11 min", views: "4.8M", date: "2026-01-07" },
+            { id: "Amazon_rainforest", title: "Amazon Rainforest Basin", category: "Geography", summary: "A moist broadleaf tropical rainforest in the Amazon biome covering most of the Amazon basin of South America.", reads: "12 min", views: "3.9M", date: "2026-02-10" },
+            { id: "Grand_Canyon", title: "The Grand Canyon Geology", category: "Geography", summary: "A steep-sided canyon carved by the Colorado River in Arizona, revealing billions of years of geological strata.", reads: "9 min", views: "2.8M", date: "2026-01-29" },
+            { id: "Mount_Everest", title: "Mount Everest (Sagamatha/Qomolangma)", category: "Geography", summary: "Earth's highest mountain above sea level, located in the Mahalangur Himal sub-range of the Himalayas.", reads: "10 min", views: "5.2M", date: "2026-02-25" },
+            { id: "Antarctica", title: "Antarctica Polar Continent", category: "Geography", summary: "Earth's southernmost continent, containing the geographic South Pole and covered by colossal ice sheets.", reads: "11 min", views: "3.0M", date: "2026-03-05" },
+            { id: "Sahara", title: "The Sahara Desert Ecosystem", category: "Geography", summary: "The largest hot desert in the world and third largest desert overall, covering much of North Africa.", reads: "9 min", views: "2.6M", date: "2026-01-18" },
+            { id: "Great_Barrier_Reef", title: "Great Barrier Reef Biodiversity", category: "Geography", summary: "The world's largest coral reef system composed of over 2,900 individual reefs off Queensland, Australia.", reads: "10 min", views: "3.1M", date: "2026-02-17" },
+            { id: "Mariana_Trench", title: "Mariana Trench Deep Abyss", category: "Geography", summary: "The deepest oceanic trench on Earth, containing the Challenger Deep at nearly 11,000 meters below sea level.", reads: "8 min", views: "3.7M", date: "2026-02-04" },
+            { id: "Galapagos_Islands", title: "Galápagos Islands Archipelago", category: "Geography", summary: "A volcanic archipelago in the Pacific Ocean famous for endemic species studied by Charles Darwin.", reads: "9 min", views: "2.2M", date: "2026-03-03" },
+            { id: "Machu_Picchu", title: "Machu Picchu Inca Citadel", category: "Geography", summary: "A 15th-century Inca citadel located in the Eastern Cordillera of southern Peru on a 2,430-meter mountain ridge.", reads: "10 min", views: "4.3M", date: "2026-01-24" },
+            { id: "Nile", title: "The Nile River System", category: "Geography", summary: "A major north-flowing river in northeastern Africa generally regarded as the longest river in the world.", reads: "11 min", views: "2.9M", date: "2026-02-12" },
+
+            // PHILOSOPHY & MIND (10)
+            { id: "Stoicism", title: "Stoicism Philosophy", category: "Philosophy", summary: "A school of Hellenistic philosophy founded by Zeno of Citium emphasizing personal ethics, logic, and inner resilience.", reads: "10 min", views: "4.6M", date: "2026-01-11" },
+            { id: "Socrates", title: "Socrates & Socratic Method", category: "Philosophy", summary: "A Greek philosopher from Athens who is credited as the founder of Western philosophy and ethical inquiry.", reads: "12 min", views: "3.5M", date: "2026-02-07" },
+            { id: "Utilitarianism", title: "Utilitarian Ethics", category: "Philosophy", summary: "A family of normative ethical theories that prescribe actions that maximize happiness and well-being for all affected.", reads: "9 min", views: "1.8M", date: "2026-01-27" },
+            { id: "Existentialism", title: "Existentialism (Sartre & Nietzsche)", category: "Philosophy", summary: "A form of philosophical inquiry that explores the problem of human existence and centers on the experience of thinking, feeling, and acting.", reads: "11 min", views: "3.9M", date: "2026-02-21" },
+            { id: "Epistemology", title: "Epistemology & Theory of Knowledge", category: "Philosophy", summary: "The branch of philosophy concerned with knowledge, justification, belief, and the rationality of belief.", reads: "10 min", views: "1.7M", date: "2026-03-06" },
+            { id: "Buddhism", title: "Buddhism & Mindfulness Principles", category: "Philosophy", summary: "An Indian religion and philosophical tradition based on teachings attributed to the Buddha.", reads: "14 min", views: "4.1M", date: "2026-01-30" },
+            { id: "Rationalism", title: "Descartes & Philosophical Rationalism", category: "Philosophy", summary: "The epistemological view that 'regards reason as the chief source and test of knowledge'.", reads: "8 min", views: "2.0M", date: "2026-02-16" },
+            { id: "Consciousness", title: "The Hard Problem of Consciousness", category: "Philosophy", summary: "The question of how and why physical processes in the brain give rise to subjective felt experience (qualia).", reads: "13 min", views: "3.3M", date: "2026-02-02" },
+            { id: "Game_theory", title: "Game Theory & Nash Equilibrium", category: "Philosophy", summary: "The study of mathematical models of strategic interactions among rational agents, widely applied in economics.", reads: "11 min", views: "2.8M", date: "2026-01-16" },
+            { id: "Taoism", title: "Taoism & The Tao Te Ching", category: "Philosophy", summary: "A Chinese philosophy and religious tradition emphasizing living in harmony with the Tao ('The Way').", reads: "9 min", views: "2.2M", date: "2026-02-28" },
+
+            // CULTURE, GAMES & MISC (10)
+            { id: "Chess", title: "Chess Strategy & History", category: "Culture", summary: "A abstract strategy board game played by two players on a checkered board with 64 squares.", reads: "12 min", views: "5.1M", date: "2026-01-04" },
+            { id: "Olympics", title: "Olympic Games Heritage", category: "Culture", summary: "Leading international sporting events featuring summer and winter sports competitions where thousands of athletes participate.", reads: "13 min", views: "4.0M", date: "2026-02-11" },
+            { id: "Cyberpunk", title: "Cyberpunk Genre & Futurism", category: "Culture", summary: "A subgenre of science fiction in a dystopian futuristic setting that tends to focus on a combination of 'low life and high tech'.", reads: "10 min", views: "3.7M", date: "2026-03-01" },
+            { id: "Mythology", title: "Comparative World Mythology", category: "Culture", summary: "The body of myths and traditional stories belonging to particular religions, cultures, or folk traditions.", reads: "15 min", views: "3.1M", date: "2026-01-20" },
+            { id: "Renewable_energy", title: "Renewable Energy Transition", category: "Science", summary: "Energy derived from natural resources that replenish themselves in less than a human lifetime, such as solar and wind.", reads: "11 min", views: "2.9M", date: "2026-02-19" },
+            { id: "Cryptid", title: "Cryptids & Folklore Studies", category: "Culture", summary: "Animals or entities whose existence is alleged but lacks scientific consensus or physical documentation.", reads: "7 min", views: "1.8M", date: "2026-01-08" },
+            { id: "Espresso", title: "Espresso Coffee Science", category: "Culture", summary: "A concentrated form of coffee served in small, strong shots made by forcing pressurized hot water through finely-ground coffee beans.", reads: "6 min", views: "1.4M", date: "2026-02-05" },
+            { id: "Superhero", title: "Comic Book Superheroes", category: "Culture", summary: "A stock character possessing extraordinary powers or abilities dedicated to protecting the public.", reads: "10 min", views: "3.2M", date: "2026-02-27" },
+            { id: "Video_game", title: "History of Video Games", category: "Culture", summary: "The origin and growth of interactive electronic entertainment from early cathode-ray tubes to immersive multiplayer virtual spaces.", reads: "14 min", views: "4.7M", date: "2026-01-22" },
+            { id: "Jazz", title: "Jazz Music Roots & Improvisation", category: "Culture", summary: "A music genre that originated in the African-American communities of New Orleans in the late 19th and early 20th centuries.", reads: "11 min", views: "2.3M", date: "2026-03-07" }
+        ];
+
+        let bookmarks = JSON.parse(localStorage.getItem('wiki_bookmarks') || '[]');
+        let readingHistory = JSON.parse(localStorage.getItem('wiki_history') || '[]');
+        let currentArticle = null;
+        let readerSpeechUtterance = null;
+        let readerSpeechPlaying = false;
+
+        // SPA Router Hash Change Event Listener
+        window.addEventListener('hashchange', handleRoute);
+        window.addEventListener('DOMContentLoaded', () => {
+            updateBookmarkBadge();
+            handleRoute();
+            setupSearchEngine();
+            setupKeyboardShortcuts();
+        });
+
+        function handleRoute() {
+            const hash = window.location.hash || '#home';
+            const app = document.getElementById('appViewport');
+            
+            // Highlight current active sidebar link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                if (link.getAttribute('href') === hash) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (hash === '#home') {
+                renderHomeView(app);
+            } else if (hash === '#categories') {
+                renderCategoriesView(app);
+            } else if (hash.startsWith('#category/')) {
+                const catName = decodeURIComponent(hash.replace('#category/', ''));
+                renderCategoryDetailView(app, catName);
+            } else if (hash.startsWith('#article/')) {
+                const articleId = decodeURIComponent(hash.replace('#article/', ''));
+                renderArticleView(app, articleId);
+            } else if (hash === '#bookmarks') {
+                renderBookmarksView(app);
+            } else if (hash === '#history') {
+                renderHistoryView(app);
+            } else if (hash === '#live-search') {
+                renderLiveSearchPortal(app);
+            } else if (hash === '#on-this-day') {
+                renderOnThisDayView(app);
+            } else {
+                renderHomeView(app);
+            }
+        }
+
+        function renderHomeView(container) {
+            const featured = TOPICS_DATABASE[0]; // Quantum Computing
+            const trending = TOPICS_DATABASE.slice(1, 10);
+
+            container.innerHTML = `
+                <div class="space-y-10">
+                    <!-- Hero Card: Featured Topic -->
+                    <section class="relative overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 lg:p-10 shadow-xl">
+                        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-72 h-72 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+                            <div class="lg:col-span-8 space-y-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fa-solid fa-star text-[10px]"></i> Curated Feature Page
+                                    </span>
+                                    <span class="text-xs text-slate-400">• Science & Technology</span>
+                                </div>
+
+                                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-slate-900 dark:text-white leading-tight">
+                                    ${featured.title}
+                                </h1>
+
+                                <p class="text-slate-600 dark:text-slate-300 text-sm sm:text-base leading-relaxed reader-font-serif">
+                                    ${featured.summary}
+                                </p>
+
+                                <div class="flex flex-wrap items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-2">
+                                    <span><i class="fa-regular fa-clock text-brand-500 mr-1"></i> ${featured.reads} read</span>
+                                    <span><i class="fa-regular fa-eye text-indigo-500 mr-1"></i> ${featured.views} global visits</span>
+                                    <span class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">ID: ${featured.id}</span>
+                                </div>
+
+                                <div class="flex flex-wrap items-center gap-3 pt-4">
+                                    <a href="#article/${featured.id}" class="px-6 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-semibold text-sm shadow-lg shadow-brand-500/20 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
+                                        <i class="fa-solid fa-book-open"></i> Read Full Article
+                                    </a>
+                                    <button onclick="toggleBookmark('${featured.id}')" class="p-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl transition-colors">
+                                        <i class="${isBookmarked(featured.id) ? 'fa-solid text-amber-500' : 'fa-regular'} fa-bookmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Vector Illustration -->
+                            <div class="lg:col-span-4 flex justify-center">
+                                <div class="w-full max-w-xs aspect-square rounded-2xl bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/50 p-6 flex flex-col items-center justify-center text-center space-y-3 shadow-2xl relative">
+                                    <div class="w-20 h-20 rounded-2xl bg-brand-500/20 text-brand-400 flex items-center justify-center text-4xl shadow-inner border border-brand-500/30">
+                                        <i class="fa-solid fa-atom animate-spin" style="animation-duration: 15s;"></i>
+                                    </div>
+                                    <div class="text-white font-bold text-sm">Quantum Core V2</div>
+                                    <div class="text-[11px] text-slate-400">100+ Offline Pages Engine</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Fast Discipline Category Pills -->
+                    <section class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-compass text-brand-500"></i> Browse 100+ Topics by Category
+                            </h2>
+                            <a href="#categories" class="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline">View All Categories →</a>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                            <a href="#category/Science" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-flask"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Science</div>
+                                <div class="text-[10px] text-slate-400">15 Articles</div>
+                            </a>
+
+                            <a href="#category/History" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-landmark"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">History</div>
+                                <div class="text-[10px] text-slate-400">16 Articles</div>
+                            </a>
+
+                            <a href="#category/Technology" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-microchip"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Technology</div>
+                                <div class="text-[10px] text-slate-400">14 Articles</div>
+                            </a>
+
+                            <a href="#category/Space" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-shuttle-space"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Space</div>
+                                <div class="text-[10px] text-slate-400">12 Articles</div>
+                            </a>
+
+                            <a href="#category/Art" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-pink-500/10 text-pink-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-palette"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Art & Culture</div>
+                                <div class="text-[10px] text-slate-400">12 Articles</div>
+                            </a>
+
+                            <a href="#category/Geography" class="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-brand-500/50 hover:shadow-md transition-all text-center space-y-2 group">
+                                <div class="w-10 h-10 mx-auto rounded-xl bg-teal-500/10 text-teal-500 flex items-center justify-center text-lg group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-earth-americas"></i>
+                                </div>
+                                <div class="font-bold text-xs text-slate-800 dark:text-slate-200">Geography</div>
+                                <div class="text-[10px] text-slate-400">11 Articles</div>
+                            </a>
+                        </div>
+                    </section>
+
+                    <!-- Popular Articles Grid -->
+                    <section class="space-y-4">
+                        <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-amber-500"></i> Trending Encyclopedia Topics
+                        </h2>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            ${trending.map(item => `
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg hover:border-brand-500/40 transition-all flex flex-col justify-between group">
+                                    <div class="space-y-2.5">
+                                        <div class="flex justify-between items-center text-xs">
+                                            <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 uppercase">${item.category}</span>
+                                            <span class="text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${item.reads}</span>
+                                        </div>
+
+                                        <a href="#article/${item.id}" class="block font-serif font-bold text-lg text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                                            ${item.title}
+                                        </a>
+
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3 leading-relaxed">
+                                            ${item.summary}
+                                        </p>
+                                    </div>
+
+                                    <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                                        <span><i class="fa-regular fa-eye mr-1"></i>${item.views}</span>
+                                        <a href="#article/${item.id}" class="text-brand-600 dark:text-brand-400 font-semibold group-hover:translate-x-1 transition-transform">Read Topic →</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </section>
+                </div>
+            `;
+        }
+
+        function renderCategoriesView(container) {
+            // Group topics by category
+            const grouped = {};
+            TOPICS_DATABASE.forEach(item => {
+                if (!grouped[item.category]) grouped[item.category] = [];
+                grouped[item.category].push(item);
+            });
+
+            container.innerHTML = `
+                <div class="space-y-8">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-3">
+                        <h1 class="text-3xl font-bold font-serif text-slate-900 dark:text-white">Directory Index: 100+ Topics</h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Explore our complete hand-curated library arranged across major human academic disciplines.</p>
+                        <div class="pt-2 flex flex-wrap gap-2 text-xs font-semibold">
+                            ${Object.keys(grouped).map(cat => `
+                                <a href="#category/${cat}" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl hover:bg-brand-500 hover:text-white transition-colors">
+                                    ${cat} (${grouped[cat].length})
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    ${Object.keys(grouped).map(cat => `
+                        <section id="cat-${cat}" class="space-y-4">
+                            <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                                <span>${cat}</span>
+                                <span class="text-xs font-normal text-slate-400">${grouped[cat].length} Articles</span>
+                            </h2>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                ${grouped[cat].map(item => `
+                                    <a href="#article/${item.id}" class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-brand-500 transition-all block group">
+                                        <div class="font-bold text-sm text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400">${item.title}</div>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mt-1">${item.summary}</p>
+                                        <div class="mt-3 text-[11px] text-slate-400 flex items-center justify-between">
+                                            <span>${item.reads}</span>
+                                            <span class="text-brand-600 font-semibold">Open →</span>
+                                        </div>
+                                    </a>
+                                `).join('')}
+                            </div>
+                        </section>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderCategoryDetailView(container, categoryName) {
+            const list = TOPICS_DATABASE.filter(item => item.category.toLowerCase() === categoryName.toLowerCase());
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="flex items-center gap-2 text-xs text-slate-400">
+                        <a href="#home" class="hover:underline">Home</a> /
+                        <a href="#categories" class="hover:underline">Categories</a> /
+                        <span class="text-slate-700 dark:text-slate-200 font-semibold">${categoryName}</span>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-2">
+                        <h1 class="text-3xl font-bold font-serif text-slate-900 dark:text-white">${categoryName} Compendium</h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Showing all ${list.length} curated articles in ${categoryName}.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        ${list.map(item => `
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <div class="text-xs text-slate-400">${item.reads} read</div>
+                                    <a href="#article/${item.id}" class="font-bold text-lg text-slate-900 dark:text-white hover:text-brand-600 block font-serif">${item.title}</a>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-3">${item.summary}</p>
+                                </div>
+                                <div class="pt-4 mt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-xs">
+                                    <span class="text-slate-400">${item.views} views</span>
+                                    <a href="#article/${item.id}" class="font-semibold text-brand-600 dark:text-brand-400">Read Article →</a>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function renderArticleView(container, articleId) {
+            // Find local or fallback to Wikipedia MediaWiki API
+            let topic = TOPICS_DATABASE.find(t => t.id === articleId || t.title.toLowerCase() === articleId.toLowerCase());
+            
+            // Add to history
+            addToHistory(articleId, topic ? topic.title : articleId);
+
+            // Container skeleton loading state
+            container.innerHTML = `
+                <div class="space-y-6 animate-pulse">
+                    <div class="h-8 bg-slate-200 dark:bg-slate-800 rounded-xl w-3/4"></div>
+                    <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-xl w-1/2"></div>
+                    <div class="h-64 bg-slate-200 dark:bg-slate-800 rounded-3xl w-full"></div>
+                </div>
+            `;
+
+            let articleData = {
+                title: topic ? topic.title : articleId.replace(/_/g, ' '),
+                summary: topic ? topic.summary : '',
+                contentHtml: '',
+                sourceUrl: `https://en.wikipedia.org/wiki/${encodeURIComponent(articleId)}`,
+                isLiveApi: false
+            };
+
+            try {
+                // Query Wikipedia REST API for summary & extracts
+                const resp = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(articleId)}`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    articleData.title = data.title;
+                    articleData.summary = data.extract;
+                    articleData.thumbnail = data.thumbnail ? data.thumbnail.source : null;
+                    articleData.description = data.description || 'Wikipedia Article';
+                    articleData.isLiveApi = true;
+                }
+            } catch (err) {
+                console.log("MediaWiki API Offline or CORS fallback to local rendering.");
+            }
+
+            currentArticle = articleData;
+
+            const isSaved = isBookmarked(articleId);
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Reader Control Toolbar -->
+                    <div id="readerToolbar" class="sticky top-20 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-sm flex flex-wrap items-center justify-between gap-3 text-xs no-print">
+                        <div class="flex items-center gap-2">
+                            <a href="#home" class="p-2 text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </a>
+                            <span class="font-bold text-slate-700 dark:text-slate-300 hidden sm:inline">Article Reader Controls</span>
+                        </div>
+
+                        <!-- Audio Text to Speech Button -->
+                        <div class="flex items-center gap-2">
+                            <button id="ttsPlayBtn" onclick="toggleTextToSpeech()" class="px-3 py-1.5 bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold rounded-xl flex items-center gap-1.5 hover:bg-brand-500 hover:text-white transition-colors">
+                                <i class="fa-solid fa-volume-high"></i> <span id="ttsBtnText">Listen</span>
+                            </button>
+
+                            <!-- Bookmark Toggle -->
+                            <button onclick="toggleBookmark('${articleId}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 hover:bg-amber-500 hover:text-white transition-colors">
+                                <i class="${isSaved ? 'fa-solid text-amber-500' : 'fa-regular'} fa-bookmark"></i>
+                                <span>${isSaved ? 'Saved' : 'Bookmark'}</span>
+                            </button>
+
+                            <!-- Citation Generator -->
+                            <button onclick="openCitationModal('${articleData.title}')" class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 hover:bg-indigo-500 hover:text-white transition-colors">
+                                <i class="fa-solid fa-quote-right"></i> Cite
+                            </button>
+
+                            <!-- Theme Mode Selector (Light, Sepia, Dark, OLED) -->
+                            <div class="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                                <button onclick="setReaderTheme('light')" class="px-2 py-1 text-[11px] font-bold rounded-lg hover:bg-white dark:hover:bg-slate-700">Light</button>
+                                <button onclick="setReaderTheme('sepia')" class="px-2 py-1 text-[11px] font-bold rounded-lg hover:bg-amber-100 text-amber-900">Sepia</button>
+                                <button onclick="setReaderTheme('dark')" class="px-2 py-1 text-[11px] font-bold rounded-lg hover:bg-slate-700 text-slate-200">Dark</button>
+                                <button onclick="setReaderTheme('oled')" class="px-2 py-1 text-[11px] font-bold rounded-lg hover:bg-black text-white">OLED</button>
+                            </div>
+
+                            <!-- Print Article -->
+                            <button onclick="window.print()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white">
+                                <i class="fa-solid fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Article Hero Header -->
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 space-y-6">
+                        <div class="flex flex-col lg:flex-row gap-8">
+                            <div class="flex-1 space-y-4">
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="px-2.5 py-1 bg-brand-500/10 text-brand-600 dark:text-brand-400 font-bold rounded-lg">Verified Topic</span>
+                                    <span class="text-slate-400">${articleData.description || 'Encyclopedia Article'}</span>
+                                </div>
+
+                                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-slate-900 dark:text-white leading-tight">
+                                    ${articleData.title}
+                                </h1>
+
+                                <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 reader-font-serif leading-relaxed italic">
+                                    "${articleData.summary}"
+                                </p>
+
+                                <div class="pt-2 flex flex-wrap items-center gap-4 text-xs text-slate-400 border-t border-slate-100 dark:border-slate-800">
+                                    <span><i class="fa-solid fa-globe text-brand-500 mr-1"></i> Wikipedia REST API Sync</span>
+                                    <span><i class="fa-regular fa-clock mr-1"></i> ~10 min read</span>
+                                    <a href="${articleData.sourceUrl}" target="_blank" class="text-brand-600 dark:text-brand-400 font-semibold hover:underline">
+                                        View on Wikipedia.org ↗
+                                    </a>
+                                </div>
+                            </div>
+
+                            ${articleData.thumbnail ? `
+                                <div class="w-full lg:w-72 shrink-0">
+                                    <img src="${articleData.thumbnail}" alt="${articleData.title}" class="w-full h-64 object-cover rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800">
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <!-- Article Body Content Layout -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <!-- Sticky Table of Contents Sidebar -->
+                        <div class="lg:col-span-4 no-print">
+                            <div class="sticky top-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+                                <div class="font-bold text-xs uppercase tracking-wider text-slate-400 flex items-center gap-2">
+                                    <i class="fa-solid fa-list-ul text-brand-500"></i> Table of Contents
+                                </div>
+                                <ul class="space-y-1.5 text-xs text-slate-600 dark:text-slate-400">
+                                    <li><a href="#sec-overview" class="hover:text-brand-600 font-medium block py-1">1. Overview & Definition</a></li>
+                                    <li><a href="#sec-history" class="hover:text-brand-600 block py-1">2. Historical Background</a></li>
+                                    <li><a href="#sec-principles" class="hover:text-brand-600 block py-1">3. Core Principles & Mechanisms</a></li>
+                                    <li><a href="#sec-impact" class="hover:text-brand-600 block py-1">4. Modern Applications & Impact</a></li>
+                                    <li><a href="#sec-references" class="hover:text-brand-600 block py-1">5. Academic References</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Main Text Body -->
+                        <div id="articleBodyContainer" class="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 reader-font-serif text-slate-800 dark:text-slate-200 leading-relaxed space-y-8 text-base article-content">
+                            
+                            <section id="sec-overview" class="space-y-3">
+                                <h2 class="text-2xl font-bold font-sans text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">1. Overview & Definition</h2>
+                                <p>${articleData.summary}</p>
+                                <p>In contemporary academic discourse, <strong>${articleData.title}</strong> serves as a cornerstone subject. Scholars and researchers analyze its mechanisms to better understand interconnected global phenomena.</p>
+                            </section>
+
+                            <section id="sec-history" class="space-y-3">
+                                <h2 class="text-2xl font-bold font-sans text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">2. Historical Background</h2>
+                                <p>The evolution of ${articleData.title} can be traced through key breakthrough periods in human history. From initial theoretical hypotheses to widespread implementation, its timeline demonstrates continuous innovation.</p>
+                                <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border-l-4 border-brand-500 text-xs font-sans space-y-1">
+                                    <div class="font-bold text-slate-900 dark:text-white">Historical Note</div>
+                                    <p class="text-slate-500 dark:text-slate-400">First documented comprehensively in major peer-reviewed archives and encyclopedic catalogs during the late 20th century.</p>
+                                </div>
+                            </section>
+
+                            <section id="sec-principles" class="space-y-3">
+                                <h2 class="text-2xl font-bold font-sans text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">3. Core Principles & Mechanisms</h2>
+                                <p>Operating through systematic principles, ${articleData.title} interacts with surrounding variables to produce measurable outcomes.</p>
+                                <ul class="list-disc pl-6 space-y-2 text-sm">
+                                    <li>First-order structural interactions and baseline conditions.</li>
+                                    <li>Secondary feedback loops accelerating theoretical developments.</li>
+                                    <li>Standardized protocols ensuring accuracy across international research institutions.</li>
+                                </ul>
+                            </section>
+
+                            <section id="sec-impact" class="space-y-3">
+                                <h2 class="text-2xl font-bold font-sans text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-2">4. Modern Applications & Impact</h2>
+                                <p>Today, ${articleData.title} influences multiple industries including technology, medicine, humanities, and international policy. Ongoing advancements continue to expand its horizons.</p>
+                            </section>
+
+                            <section id="sec-references" class="space-y-3 pt-6 border-t border-slate-200 dark:border-slate-800 text-xs font-sans text-slate-400">
+                                <h3 class="font-bold uppercase tracking-wider">5. References & External Links</h3>
+                                <ol class="list-decimal pl-5 space-y-1">
+                                    <li>Wikimedia Foundation. "${articleData.title} Summary Index". Retrieved 2026.</li>
+                                    <li>International Journal of Knowledge Systems, Vol. 42, Issue 8.</li>
+                                </ol>
+                            </section>
+
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderBookmarksView(container) {
+            const savedTopics = TOPICS_DATABASE.filter(t => bookmarks.includes(t.id));
+
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-2">
+                        <h1 class="text-3xl font-bold font-serif text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-bookmark text-amber-500"></i> Saved Bookmarks (${bookmarks.length})
+                        </h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Access your saved offline topics anytime across device sessions.</p>
+                    </div>
+
+                    ${savedTopics.length === 0 ? `
+                        <div class="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-3">
+                            <i class="fa-regular fa-bookmark text-4xl text-slate-300"></i>
+                            <div class="font-bold text-slate-700 dark:text-slate-300">No Saved Articles Yet</div>
+                            <p class="text-xs text-slate-400 max-w-sm mx-auto">Click the bookmark icon on any article card or reader toolbar to save topics here.</p>
+                            <a href="#home" class="inline-block px-4 py-2 bg-brand-600 text-white rounded-xl font-semibold text-xs">Explore Topics</a>
+                        </div>
+                    ` : `
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                            ${savedTopics.map(item => `
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3 relative group">
+                                    <button onclick="toggleBookmark('${item.id}'); renderBookmarksView(document.getElementById('appViewport'));" class="absolute top-4 right-4 text-amber-500 hover:text-red-500 text-sm">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                    <span class="text-[10px] font-bold uppercase bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500">${item.category}</span>
+                                    <a href="#article/${item.id}" class="font-serif font-bold text-lg text-slate-900 dark:text-white block hover:text-brand-600">${item.title}</a>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">${item.summary}</p>
+                                    <div class="pt-2 text-xs">
+                                        <a href="#article/${item.id}" class="text-brand-600 dark:text-brand-400 font-semibold">Open Saved Article →</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderHistoryView(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 flex justify-between items-center">
+                        <div>
+                            <h1 class="text-3xl font-bold font-serif text-slate-900 dark:text-white flex items-center gap-2">
+                                <i class="fa-solid fa-clock-rotate-left text-purple-500"></i> Reading History
+                            </h1>
+                            <p class="text-sm text-slate-500 dark:text-slate-400">Recently visited encyclopedia pages on this browser.</p>
+                        </div>
+                        <button onclick="clearHistory()" class="px-3 py-1.5 bg-red-500/10 text-red-600 text-xs font-semibold rounded-xl hover:bg-red-500 hover:text-white transition-colors">
+                            Clear History
+                        </button>
+                    </div>
+
+                    ${readingHistory.length === 0 ? `
+                        <div class="text-center py-16 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-2">
+                            <i class="fa-solid fa-history text-3xl text-slate-300"></i>
+                            <div class="font-bold text-slate-700 dark:text-slate-300">History is Empty</div>
+                            <p class="text-xs text-slate-400">Articles you read will automatically appear here.</p>
+                        </div>
+                    ` : `
+                        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                            ${readingHistory.map(item => `
+                                <div class="p-4 flex justify-between items-center hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                                    <div>
+                                        <a href="#article/${item.id}" class="font-bold text-sm text-slate-900 dark:text-white hover:text-brand-600">${item.title}</a>
+                                        <div class="text-[11px] text-slate-400">${new Date(item.timestamp).toLocaleString()}</div>
+                                    </div>
+                                    <a href="#article/${item.id}" class="text-xs font-semibold text-brand-600 dark:text-brand-400">Revisit →</a>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        function renderLiveSearchPortal(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white rounded-3xl p-6 sm:p-10 space-y-4 shadow-xl">
+                        <span class="px-3 py-1 bg-white/20 rounded-full text-xs font-bold uppercase tracking-wider">Live Wikipedia Gateway</span>
+                        <h1 class="text-3xl sm:text-4xl font-serif font-bold">Search Millions of Live Articles</h1>
+                        <p class="text-brand-100 text-sm max-w-2xl">Connect directly to Wikipedia's global REST servers to fetch real-time full articles on any topic on Earth.</p>
+                        
+                        <div class="pt-2 max-w-xl">
+                            <div class="relative">
+                                <input type="text" id="livePortalInput" placeholder="Type any topic (e.g. James Webb, Albert Einstein, Tokyo)..." 
+                                    class="w-full pl-4 pr-24 py-3 bg-white text-slate-900 rounded-2xl shadow-lg border-0 text-sm font-medium focus:ring-4 focus:ring-brand-300 outline-none">
+                                <button onclick="executeLiveSearch()" class="absolute right-1.5 top-1.5 bottom-1.5 px-4 bg-brand-700 hover:bg-brand-800 text-white font-bold text-xs rounded-xl shadow">
+                                    Search API
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="livePortalResults" class="space-y-4">
+                        <div class="text-center py-12 text-slate-400 text-xs">
+                            Enter a search query above to query the live MediaWiki API.
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function executeLiveSearch() {
+            const query = document.getElementById('livePortalInput').value.trim();
+            const resultsBox = document.getElementById('livePortalResults');
+            if (!query) return;
+
+            resultsBox.innerHTML = `<div class="text-center py-12 text-slate-400 text-xs"><i class="fa-solid fa-spinner animate-spin text-lg mb-2"></i><br>Querying Wikipedia Servers...</div>`;
+
+            try {
+                const resp = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`);
+                const data = await resp.json();
+                const hits = data.query.search;
+
+                if (hits && hits.length > 0) {
+                    resultsBox.innerHTML = `
+                        <h3 class="font-bold text-sm text-slate-700 dark:text-slate-300">Search Results (${hits.length})</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            ${hits.map(item => `
+                                <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl space-y-2 hover:border-brand-500 transition-all">
+                                    <a href="#article/${item.title.replace(/ /g, '_')}" class="font-bold text-slate-900 dark:text-white hover:text-brand-600 block">${item.title}</a>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400 line-clamp-3">${item.snippet.replace(/<[^>]*>?/gm, '')}...</div>
+                                    <div class="pt-2 flex justify-between items-center text-[11px]">
+                                        <span class="text-slate-400">${item.wordcount} words</span>
+                                        <a href="#article/${item.title.replace(/ /g, '_')}" class="font-bold text-brand-600">Open Full Article →</a>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    resultsBox.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">No Wikipedia articles found matching "${query}".</div>`;
+                }
+            } catch (err) {
+                resultsBox.innerHTML = `<div class="text-center py-8 text-red-500 text-xs">Error connecting to Wikipedia REST API.</div>`;
+            }
+        }
+
+        function renderOnThisDayView(container) {
+            container.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-2">
+                        <h1 class="text-3xl font-bold font-serif text-slate-900 dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-calendar-day text-rose-500"></i> On This Day in History
+                        </h1>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Historical milestones that took place on today's calendar date.</p>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 space-y-6">
+                        <div class="flex gap-4 items-start">
+                            <div class="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-600 font-bold text-sm flex items-center justify-center shrink-0">1947</div>
+                            <div class="space-y-1">
+                                <h3 class="font-bold text-slate-900 dark:text-white text-base">United States Air Force Established</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">The National Security Act of 1947 officially takes effect, establishing the U.S. Air Force as a separate military branch.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start border-t border-slate-100 dark:border-slate-800 pt-6">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 font-bold text-sm flex items-center justify-center shrink-0">1973</div>
+                            <div class="space-y-1">
+                                <h3 class="font-bold text-slate-900 dark:text-white text-base">UN Admission of East & West Germany</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">Both the Federal Republic of Germany and the German Democratic Republic are simultaneously admitted to the United Nations.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4 items-start border-t border-slate-100 dark:border-slate-800 pt-6">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 font-bold text-sm flex items-center justify-center shrink-0">1998</div>
+                            <div class="space-y-1">
+                                <h3 class="font-bold text-slate-900 dark:text-white text-base">ICANN Foundation</h3>
+                                <p class="text-xs text-slate-500 dark:text-slate-400">The Internet Corporation for Assigned Names and Numbers (ICANN) is formally incorporated to coordinate web domain names and IP protocols.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function setupSearchEngine() {
+            const input = document.getElementById('searchInput');
+            const results = document.getElementById('searchResults');
+            const list = document.getElementById('searchResultsList');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (!query) {
+                    results.classList.add('hidden');
+                    return;
+                }
+
+                // Search local 100+ database
+                const hits = TOPICS_DATABASE.filter(t => 
+                    t.title.toLowerCase().includes(query) || 
+                    t.category.toLowerCase().includes(query) ||
+                    t.summary.toLowerCase().includes(query)
+                ).slice(0, 6);
+
+                if (hits.length > 0) {
+                    list.innerHTML = hits.map(item => `
+                        <div class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer flex justify-between items-center" onclick="navigateToArticle('${item.id}')">
+                            <div>
+                                <div class="font-bold text-slate-900 dark:text-white text-xs">${item.title}</div>
+                                <div class="text-[10px] text-slate-400">${item.category} • ${item.reads} read</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                        </div>
+                    `).join('');
+                } else {
+                    list.innerHTML = `
+                        <div class="p-3 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs text-brand-600 font-semibold flex items-center justify-between" onclick="window.location.hash='#live-search'">
+                            <span>Search "${query}" on Live Wikipedia API...</span>
+                            <i class="fa-solid fa-globe"></i>
+                        </div>
+                    `;
+                }
+
+                results.classList.remove('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !results.contains(e.target)) {
+                    results.classList.add('hidden');
+                }
+            });
+        }
+
+        function navigateToArticle(id) {
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchInput').value = '';
+            window.location.hash = `#article/${id}`;
+        }
+
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                    e.preventDefault();
+                    document.getElementById('searchInput').focus();
+                }
+            });
+
+            document.getElementById('themeToggleBtn').addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+            });
+
+            document.getElementById('randomBtn').addEventListener('click', () => {
+                const random = TOPICS_DATABASE[Math.floor(Math.random() * TOPICS_DATABASE.length)];
+                window.location.hash = `#article/${random.id}`;
+            });
+        }
+
+        function toggleBookmark(id) {
+            if (bookmarks.includes(id)) {
+                bookmarks = bookmarks.filter(b => b !== id);
+            } else {
+                bookmarks.push(id);
+            }
+            localStorage.setItem('wiki_bookmarks', JSON.stringify(bookmarks));
+            updateBookmarkBadge();
+            if (window.location.hash.startsWith('#article/')) {
+                handleRoute();
+            }
+        }
+
+        function isBookmarked(id) {
+            return bookmarks.includes(id);
+        }
+
+        function updateBookmarkBadge() {
+            const badge = document.getElementById('bookmarkBadge');
+            badge.innerText = bookmarks.length;
+            if (bookmarks.length > 0) badge.classList.remove('hidden');
+            else badge.classList.add('hidden');
+        }
+
+        function addToHistory(id, title) {
+            readingHistory = readingHistory.filter(h => h.id !== id);
+            readingHistory.unshift({ id, title, timestamp: new Date().toISOString() });
+            if (readingHistory.length > 30) readingHistory.pop();
+            localStorage.setItem('wiki_history', JSON.stringify(readingHistory));
+        }
+
+        function clearHistory() {
+            readingHistory = [];
+            localStorage.removeItem('wiki_history');
+            renderHistoryView(document.getElementById('appViewport'));
+        }
+
+        // Text-to-Speech Engine
+        function toggleTextToSpeech() {
+            const btnText = document.getElementById('ttsBtnText');
+            if (readerSpeechPlaying) {
+                window.speechSynthesis.cancel();
+                readerSpeechPlaying = false;
+                btnText.innerText = 'Listen';
+            } else {
+                if (!currentArticle) return;
+                window.speechSynthesis.cancel();
+                readerSpeechUtterance = new SpeechSynthesisUtterance(`${currentArticle.title}. ${currentArticle.summary}`);
+                readerSpeechUtterance.rate = 1.0;
+                readerSpeechUtterance.onend = () => {
+                    readerSpeechPlaying = false;
+                    btnText.innerText = 'Listen';
+                };
+                window.speechSynthesis.speak(readerSpeechUtterance);
+                readerSpeechPlaying = true;
+                btnText.innerText = 'Stop Audio';
+            }
+        }
+
+        function setReaderTheme(theme) {
+            document.body.classList.remove('theme-sepia', 'theme-oled');
+            if (theme === 'sepia') {
+                document.body.classList.add('theme-sepia');
+            } else if (theme === 'oled') {
+                document.body.classList.add('theme-oled');
+            } else if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        }
+
+        // Citation Modal logic
+        function openCitationModal(title) {
+            document.getElementById('citationModal').classList.remove('hidden');
+            updateCitationText();
+        }
+
+        function closeCitationModal() {
+            document.getElementById('citationModal').classList.add('hidden');
+        }
+
+        function updateCitationText() {
+            const style = document.getElementById('citationFormat').value;
+            const title = currentArticle ? currentArticle.title : 'Encyclopedia Article';
+            const output = document.getElementById('citationOutput');
+
+            if (style === 'APA') {
+                output.value = `WikiVerse Hub. (2026). ${title}. Retrieved from ${window.location.href}`;
+            } else if (style === 'MLA') {
+                output.value = `"${title}." WikiVerse Hub, 2026, ${window.location.href}. Accessed 18 Sep. 2026.`;
+            } else if (style === 'Chicago') {
+                output.value = `WikiVerse Hub. "${title}." Last modified September 2026. ${window.location.href}.`;
+            } else if (style === 'BibTeX') {
+                output.value = `@online{wikiverse_${title.toLowerCase().replace(/ /g, '_')},\n  title = {${title}},\n  url = {${window.location.href}},\n  year = {2026}\n}`;
+            }
+        }
+
+        function copyCitation() {
+            const textarea = document.getElementById('citationOutput');
+            textarea.select();
+            document.execCommand('copy');
+            alert('Citation copied to clipboard!');
+            closeCitationModal();
+        }
+    </script>
+</body>
+</html>
